@@ -1,68 +1,76 @@
 package generator;
 
 /**
- * 이 클래스는 사용자가 지정한 최대 값까지 소수를 생성한다.
- * 사용된 알고리즘은 에라스토테네스의 체다.
- * <p>
- *   에라스토테네스: 기원전 276 년에 리비아 키레네에서 출생, 기원전 194 년에 사망
- *   지구 둘레를 최초로 계산한 사람이자 달력에 윤년을 도입한 사람.
- *   알렉산드리아 도서관장을 역임.
- * </p>
- *
- * 알고리즘은 상당히 단순하다. 2 에서 시작하는 정수 배열을 대상으로
- * 2 의 배수를 모두 제거한다. 다음으로 남은 정수를 찾아 이 정수의 배수를 모두 지운다.
- * 최대 값의 제곱근이 될 때까지 이를 반복한다.
+ * 이 클래스는 사용자가 지정한 최대 값까지 소수를 구한다.
+ * 알고리즘은 에라스토테네스의 체다.
+ * 2에서 시작하는 정수 배열을 대상으로 작업한다.
+ * 최대 값까지 정수를 찾아 그에 해당하는 배수를 모두 제거한다.
+ * 배열에 더 이상 배수가 없을 때까지 반복한다.
  */
 public class PrimeGenerator {
+  private static boolean[] crossedOut;
+  private static int[] result;
 
-  /**
-   * @param maxValue 는 소수를 찾아낼 최대 값
-   */
+  private PrimeGenerator() {
+  }
+
   public static int[] generatePrimes(int maxValue) {
-    if (maxValue >= 2) {
-      // 선언
-      int s = maxValue + 1; // 배열 크기
-      boolean[] f = new boolean[s];
-      int i;
-
-      // 배열을 참으로 초기화
-      for (i = 0; i < s; i++) {
-        f[i] = true;
-      }
-
-      // 소수가 아닌 알려진 숫자를 제거
-      f[0] = f[1] = false;
-
-      // 체
-      int j;
-      for (i = 2; i < Math.sqrt(s) + 1; i++) {
-        if (f[i]) { // i 가 남아 있는 숫자라면 이 숫자의 배수를 구한다.
-          for (j = 2 * i; j < s; j += i) {
-            f[j] = false;
-          }
-        }
-      }
-
-      // 소수 개수는?
-      int count = 0;
-      for (i = 0; i < s; i++) {
-        if (f[i]) {
-          count++; // 카운트 증가
-        }
-      }
-
-      int[] primes = new int[count];
-
-      // 소수를 결과 배열로 이동시킨다.
-      for (i = 0, j = 0; i < s; i++) {
-        if (f[i]) {
-          primes[j++] = i;
-        }
-      }
-
-      return primes;
-    } else { // maxValue < 2
-      return new int[0]; // 입력이 잘못되면 비어있는 배열을 반환한다.
+    if (maxValue < 2) {
+      return new int[0];
     }
+
+    uncrossIntegersUpTo(maxValue);
+    crossOutMultiples();
+    putUncrossedIntegersIntoResult();
+    return result;
+  }
+
+  private static void uncrossIntegersUpTo(int maxValue) {
+    crossedOut = new boolean[maxValue + 1];
+  }
+
+  private static void crossOutMultiples() {
+    int limit = determineIterationLimit();
+    for (int i = 2; i <= limit; i++) {
+      if (isNotCrossed(i)) {
+        crossOutMultiplesOf(i);
+      }
+    }
+  }
+
+  private static int determineIterationLimit() {
+    // 배열에 있는 모든 배수는 배열 크기의 제곱근보다 작은 소수의 인수이다.
+    // 따라서 이 제곱근보다 더 큰 숫자의 배수는 제거할 필요가 없다.
+    double iterationLimit = Math.sqrt(crossedOut.length);
+    return (int) iterationLimit;
+  }
+
+  private static boolean isNotCrossed(int i) {
+    return !crossedOut[i];
+  }
+
+  private static void crossOutMultiplesOf(int i) {
+    for (int multiple = 2*i; multiple < crossedOut.length; multiple += i) {
+      crossedOut[multiple] = true;
+    }
+  }
+
+  private static void putUncrossedIntegersIntoResult() {
+    result = new int[numberOfUncrossedIntegers()];
+    for (int j = 0, i = 2; i < crossedOut.length; i++) {
+      if (isNotCrossed(i)) {
+        result[j++] = i;
+      }
+    }
+  }
+
+  private static int numberOfUncrossedIntegers() {
+    int count = 0;
+    for (int i = 2; i < crossedOut.length; i++) {
+      if (isNotCrossed(i)) {
+        count++;
+      }
+    }
+    return count;
   }
 }
