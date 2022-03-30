@@ -10,6 +10,8 @@ public class ComparisonCompactor {
   private final String actual;
   private int prefix;
   private int suffix;
+  private String compactExpected;
+  private String compactActual;
 
   public ComparisonCompactor(int contextLength, String expected, String actual) {
     this.contextLength = contextLength;
@@ -19,14 +21,18 @@ public class ComparisonCompactor {
 
   public String formatCompactedComparison(String message) {
     if (canBeCompacted()) {
-      findCommonPrefix();
-      findCommonSuffix();
-      String compactExpected = compactString(this.expected);
-      String compactActual = compactString(this.actual);
+      compactExpectedAndActual();
       return Assert.format(message, compactExpected, compactActual);
     } else {
       return Assert.format(message, expected, actual);
     }
+  }
+
+  private void compactExpectedAndActual() {
+    int prefixIndex = findCommonPrefix();
+    int suffixIndex = findCommonSuffix(prefixIndex);
+    compactExpected = compactString(this.expected);
+    compactActual = compactString(this.actual);
   }
 
   private boolean canBeCompacted() {
@@ -37,27 +43,28 @@ public class ComparisonCompactor {
     return expected.equals(actual);
   }
 
-  private void findCommonPrefix() {
-    prefix = 0;
+  private int findCommonPrefix() {
+    int prefixIndex = 0;
     int end = Math.min(expected.length(), actual.length());
-    for (; prefix < end; prefix++) {
-      if (expected.charAt(prefix) != actual.charAt(prefix)) {
+    for (; prefixIndex < end; prefixIndex++) {
+      if (expected.charAt(prefixIndex) != actual.charAt(prefixIndex)) {
         break;
       }
     }
+    return prefixIndex;
   }
 
-  private void findCommonSuffix() {
+  private int findCommonSuffix(int prefixIndex) {
     int expectedSuffix = expected.length() - 1;
     int actualSuffix = actual.length() - 1;
     for (;
-         actualSuffix >= prefix && expectedSuffix >= prefix;
+         actualSuffix >= prefixIndex && expectedSuffix >= prefixIndex;
          actualSuffix--, expectedSuffix--) {
       if (expected.charAt(expectedSuffix) != actual.charAt(actualSuffix)) {
         break;
       }
     }
-    suffix = expected.length() - expectedSuffix;
+    return expected.length() - expectedSuffix;
   }
 
   private String compactString(String source) {
