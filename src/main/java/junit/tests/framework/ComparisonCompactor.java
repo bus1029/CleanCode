@@ -17,21 +17,20 @@ public class ComparisonCompactor {
     this.actual = actual;
   }
 
-  public String compact(String message) {
-    if (shouldNotCompact()) {
+  public String formatCompactedComparison(String message) {
+    if (canBeCompacted()) {
+      findCommonPrefix();
+      findCommonSuffix();
+      String compactExpected = compactString(this.expected);
+      String compactActual = compactString(this.actual);
+      return Assert.format(message, compactExpected, compactActual);
+    } else {
       return Assert.format(message, expected, actual);
     }
-
-    findCommonPrefix();
-    findCommonSuffix();
-    String compactExpected = compactString(this.expected);
-    String compactActual = compactString(this.actual);
-    return Assert.format(message, compactExpected, compactActual);
   }
 
-  private boolean shouldNotCompact() {
-    // 무조건 만족해야 하는 조건이기 때문에 메소드 이름에 should 를 붙였다.
-    return expected == null || actual == null || areStringsEqual();
+  private boolean canBeCompacted() {
+    return expected != null && actual != null && !areStringsEqual();
   }
 
   private boolean areStringsEqual() {
