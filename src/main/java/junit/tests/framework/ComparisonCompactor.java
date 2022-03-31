@@ -1,7 +1,7 @@
 package junit.tests.framework;
 
 public class ComparisonCompactor {
-  private static final String ELLIPSES = "...";
+  private static final String ELLIPSIS = "...";
   private static final String DELTA_END = "]";
   private static final String DELTA_START = "[";
 
@@ -38,8 +38,8 @@ public class ComparisonCompactor {
 
   private void compactExpectedAndActual() {
     findCommonPrefixAndSuffix();
-    compactExpected = compactString(this.expected);
-    compactActual = compactString(this.actual);
+    compactExpected = compact(this.expected);
+    compactActual = compact(this.actual);
   }
 
   private void findCommonPrefixAndSuffix() {
@@ -71,23 +71,39 @@ public class ComparisonCompactor {
     return s.charAt(s.length() - i - 1);
   }
 
-  private String compactString(String source) {
-    return computeCommonPrefix() +
+  private String compact(String source) {
+    return startingEllipsis() +
+            startingContext() +
             DELTA_START +
-            source.substring(prefixLength, source.length() - suffixLength) +
+            delta(source) +
             DELTA_END +
-            computeCommonSuffix();
+            endingContext() +
+            endingEllipsis();
   }
 
-  private String computeCommonPrefix() {
-    return (prefixLength > contextLength ? ELLIPSES : "") +
-            expected.substring(Math.max(0, prefixLength - contextLength), prefixLength);
+  private String startingEllipsis() {
+    return prefixLength > contextLength ? ELLIPSIS : "";
   }
 
-  private String computeCommonSuffix() {
-    int end = Math.min(expected.length() - suffixLength + contextLength, expected.length());
-    return expected.substring(expected.length() - suffixLength, end) +
-            (expected.length() - suffixLength <
-                    expected.length() - contextLength ? ELLIPSES : "");
+  private String startingContext() {
+    int contextStart = Math.max(0, prefixLength - contextLength);
+    int contextEnd = this.prefixLength;
+    return expected.substring(contextStart, contextEnd);
+  }
+
+  private String delta(String s) {
+    int deltaStart = this.prefixLength;
+    int deltaEnd = s.length() - suffixLength;
+    return s.substring(deltaStart, deltaEnd);
+  }
+
+  private String endingContext() {
+    int contextStart = expected.length() - suffixLength;
+    int contextEnd = Math.min(contextStart + contextLength, expected.length());
+    return expected.substring(contextStart, contextEnd);
+  }
+
+  private String endingEllipsis() {
+    return suffixLength > contextLength ? ELLIPSIS : "";
   }
 }
