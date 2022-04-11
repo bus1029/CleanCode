@@ -12,6 +12,8 @@ class ArgsTest {
 
     assertThat(parser.isValid()).isTrue();
     assertThat(parser.cardinality()).isEqualTo(4);
+    assertThat(parser.errorMessage()).isEmpty();
+    assertThat(parser.usage()).isNotEmpty();
     assertThat(parser.getBoolean('t')).isTrue();
     assertThat(parser.getBoolean('f')).isTrue();
     assertThat(parser.getBoolean('a')).isTrue();
@@ -37,7 +39,7 @@ class ArgsTest {
     Args parser = new Args("t,a,#,$", args);
 
     assertThat(parser.isValid()).isFalse();
-    System.out.println(parser.errorMessage());
+    assertThat(parser.errorMessage()).isNotEmpty();
     assertThat(parser.cardinality()).isEqualTo(2);
     assertThat(parser.getBoolean('t')).isTrue();
     assertThat(parser.getBoolean('a')).isTrue();
@@ -48,7 +50,17 @@ class ArgsTest {
     String[] args = {"-t", "-f", "-a", "-s"};
     Args parser = new Args("tf,-a, -s", args);
 
-    assertThat(parser.isValid()).isTrue();
+    assertThat(parser.isValid()).isFalse();
+    assertThat(parser.errorMessage()).isNotEmpty();
     assertThat(parser.cardinality()).isZero();
+  }
+
+  @Test
+  void testBooleanArgs_emptySchemaAndArguments() {
+    String[] args = {};
+    Args parser = new Args("", args);
+
+    assertThat(parser.usage()).isEmpty();
+    assertThat(parser.isValid()).isTrue();
   }
 }
